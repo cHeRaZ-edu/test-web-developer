@@ -5,9 +5,18 @@
             $db = "db_personal";
             $user = "root";
             $pass = "";
-            $mysqli = new mysqli($host,$user,$pass,$db);
-            if ($mysqli->connect_errno) {
-                die("Error de conexión: " . $mysqli->connect_error);
+            try {
+                $mysqli = new mysqli($host,$user,$pass,$db);
+                if ($mysqli->connect_errno) {
+                    $response = (object)array("status"=>500,"message"=>$mysqli->connect_error);
+                    echo json_encode($response);
+                    die("Error de conexión: " . $mysqli->connect_error);
+                }
+
+            } catch(Exception $e) {
+                $response = (object)array("status"=>500,"message"=>"Error a conectarse a la base de datos, favor de crear la base de datos en el archivo database.sql o configurar el usuario y contraseña en el archivo db.php");
+                echo json_encode($response);
+                exit;
             }
             return $mysqli;
         }
@@ -18,26 +27,46 @@
             "'" . $personal->genero . "'," .
             "'" . $personal->fechaNacimiento . "'," .
             "'" . $personal->email . "')";
-           $id = $mysqli->query($sql);
+            try {
+                $id = $mysqli->query($sql);
+            } catch(Exception $e) {
+                $response = (object)array("status"=>500,"message"=>"Error, la tabla personal no está creada.");
+                echo json_encode($response);
+                exit;
+            }
+           
            return db::BuscarPersonal($mysqli,$id);
-
         }
         static public function ObtenerPersonal($mysqli) {
             $sql = "SELECT * FROM personal;";
-            $result = $mysqli->query($sql);
             $personal = [];
-            while($row = $result->fetch_assoc()) {
-                array_push($personal, $row);
+            try {
+                $result = $mysqli->query($sql);
+                while($row = $result->fetch_assoc()) {
+                    array_push($personal, $row);
+                }
+            } catch(Exception $e) {
+                $response = (object)array("status"=>500,"message"=>"Error, la tabla personal no está creada.");
+                echo json_encode($response);
+                exit;
             }
+            
             return $personal;
         }
         static public function BuscarPersonal($mysqli,$id) {
             $sql = "SELECT * FROM personal WHERE id = " . $id .";";
-            $result = $mysqli->query($sql);
             $personal = null;
-            while($row = $result->fetch_assoc()) {
-                $personal = $row;
+            try {
+                $result = $mysqli->query($sql);
+                while($row = $result->fetch_assoc()) {
+                    $personal = $row;
+                }
+            } catch(Exception $e) {
+                $response = (object)array("status"=>500,"message"=>"Error, la tabla personal no está creada.");
+                echo json_encode($response);
+                exit;
             }
+            
             return $personal;
         }
     }

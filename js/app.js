@@ -29,6 +29,8 @@ $(function () {
             xhr.onreadystatechange = function () {
                 if(xhr.readyState == XMLHttpRequest.DONE && xhr.status == 200)  {
                     let res = JSON.parse(xhr.response);
+                    if(isErrorServer(res))
+                        return;
                     content.html(res.message);
                     btnAccept.text("Aceptar");
                     btnAccept.click(function () {
@@ -56,13 +58,16 @@ $(function () {
         xhr.open("POST", "/consultarpersonal.php");
         xhr.onreadystatechange = function () {
             if(xhr.readyState == XMLHttpRequest.DONE && xhr.status == 200)  {
+                console.log(xhr.response);
                 let res = JSON.parse(xhr.response);
+                if(isErrorServer(res))
+                    return;
                 personalList = res.personalArray;
                 if(personalList.length > 0) {
                     let modal = $("#modalPersonal");
                     let title = $(".modal-title");
                     let content = $(".modal-body");
-                    title.text("Subir Personal");
+                    title.text("Personal Actualizado");
                     content.text(res.message);
                     let btnAccept = modal.find("#btnAccept");
                     btnAccept.text("Aceptar");
@@ -77,4 +82,21 @@ $(function () {
         xhr.send();
     }
     consultarLista();
+    function isErrorServer(res) {
+        if(res.status == 500) {
+            let modal = $("#modalPersonal");
+            let title = $(".modal-title");
+            let content = $(".modal-body");
+            title.text("Error en la base de datos");
+            content.text(res.message);
+            let btnAccept = modal.find("#btnAccept");
+            btnAccept.text("Aceptar");
+            modal.modal("show");
+            btnAccept.click(function () {
+                modal.modal("hide");
+            });
+            return true;
+        }
+        return false;
+    }
 });
